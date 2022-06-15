@@ -25,7 +25,7 @@
 		9C1AFC5526C276870009636E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9C1AFC5726C284910009636E /* StartUp.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = StartUp.storyboard; sourceTree = "<group>"; };
 		9C39C0D826B9C64E007A318E /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
-		9C39C0DA26B9C781007A318E /* LittleJohnModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleJohnModel.swift; sourceTree = "<group>"; };
+		9C39C0DA26B9C781007A318E /* LittleJohnModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleJohnModel.swift; sourceTree = "<group>"; usesTabs = 1; };
 		9C3CAB3F27117B8F0017A49D /* SymbolRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolRow.swift; sourceTree = "<group>"; };
 		9C3CAB4127117D030017A49D /* Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		9C59D76626B6F45200AB05B4 /* TickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickerView.swift; sourceTree = "<group>"; };
@@ -91,9 +91,9 @@
 				9CA9D30526B6DFBD00F9C822 /* LittleJohn */,
 				9CA9D30426B6DFBD00F9C822 /* Products */,
 			);
-			indentWidth = 2;
+			indentWidth = 4;
 			sourceTree = "<group>";
-			tabWidth = 2;
+			tabWidth = 4;
 		};
 		9CA9D30426B6DFBD00F9C822 /* Products */ = {
 			isa = PBXGroup;
