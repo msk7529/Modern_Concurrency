@@ -66,6 +66,11 @@ class LittleJohnModel: ObservableObject {
 				print("Updated: \(Date())")
 			}
 		}
+		
+		// 서버와의 통신이 끊긴경우에 대한 처리
+		await MainActor.run {
+			tickerSymbols = []
+		}
 	}
 	
 	func availableSymbols() async throws -> [String] {
