@@ -48,6 +48,7 @@ class LittleJohnModel: ObservableObject {
 		}
 		
 		let (stream, response) = try await liveURLSession.bytes(from: url)
+		// await 코드로 인해 쓰레드가 임의로 변경됨
 		
 		guard (response as? HTTPURLResponse)?.statusCode == 200 else {
 			throw "The server responded with an error."
@@ -55,6 +56,7 @@ class LittleJohnModel: ObservableObject {
 		
 		for try await line in stream.lines {
 			// 비동기 시퀀스. stream은 서버로 부터 수신된 응답의 byte sequence 이다.
+			// 매 loop 마다 쓰레드는 임의로 변경된다.
 			let sortedSymbols = try JSONDecoder()
 				.decode([Stock].self, from: Data(line.utf8))
 				.sorted { $0.name < $1.name }
