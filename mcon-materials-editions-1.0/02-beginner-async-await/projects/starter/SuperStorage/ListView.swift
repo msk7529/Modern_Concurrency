@@ -93,6 +93,19 @@ struct ListView: View {
             }, message: {
                 Text(lastErrorMessage)
             })
+            .task {
+                // 뷰가 나타날 때 비동기 코드를 실행할 수 있는 view modifier
+                guard files.isEmpty else {
+                    // 이미 파일 목록을 가져왔는지 확인
+                    return
+                }
+                
+                do {
+                    files = try await model.availableFiles()
+                } catch {
+                    lastErrorMessage = error.localizedDescription
+                }
+            }
         }
     }
 }
