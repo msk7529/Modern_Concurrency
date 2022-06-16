@@ -82,6 +82,26 @@ struct SymbolListView: View {
                     Text(lastErrorMessage)
                 })
                 .padding(.horizontal)
+                /*
+                onAppear은 동기적으로 동작하는 코드인데, non-concurrent 컨텍스트에서 async한 메서드를 호출하려고 하면 에러를 발생시킨다.
+                onAppear 내에서 availableSymbols을 호출하려면, Task로 한 번 감싸면 된다.
+                .onAppear {
+                    try await model.availableSymbols() // 에러. 아래처럼 사용해야 함
+                    Task {
+                        try await model.availableSymbols()
+                    }
+                }
+                */
+                .task {
+                    // task는 onAppear과 비슷하게 뷰가 스크린에 나타날 때 호출되는데, 비동기 메서드를 호출할 수 있도록 한다.
+                    guard symbols.isEmpty else { return }
+
+                    do {
+                        symbols = try await model.availableSymbols()
+                    } catch {
+                        lastErrorMessage = error.localizedDescription
+                    }
+                }
             }
         }
     }
