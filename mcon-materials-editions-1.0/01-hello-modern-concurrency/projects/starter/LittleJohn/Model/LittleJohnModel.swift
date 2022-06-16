@@ -46,6 +46,20 @@ class LittleJohnModel: ObservableObject {
 		guard let url = URL(string: "http://localhost:8080/littlejohn/ticker?\(selectedSymbols.joined(separator: ","))") else {
 			throw "The URL could not be created."
 		}
+		
+		let (stream, response) = try await liveURLSession.bytes(from: url)
+		
+		guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+			throw "The server responded with an error."
+		}
+		
+		for try await line in stream.lines {
+			// 비동기 시퀀스. stream은 서버로 부터 수신된 응답의 byte sequence 이다.
+			let sortedSymbols = try JSONDecoder()
+				.decode([Stock].self, from: Data(line.utf8))
+				.sorted { $0.name < $1.name }
+			tickerSymbols = sortedSymbols
+		}
 	}
 	
 	func availableSymbols() async throws -> [String] {
@@ -66,7 +80,7 @@ class LittleJohnModel: ObservableObject {
 	/// A URL session that lets requests run indefinitely so we can receive live updates from server.
 	private lazy var liveURLSession: URLSession = {
 		var configuration = URLSessionConfiguration.default
-		configuration.timeoutIntervalForRequest = .infinity
+		configuration.timeoutIntervalForRequest = .infinity		// expire, time out을 막는다.
 		return URLSession(configuration: configuration)
 	}()
 }
