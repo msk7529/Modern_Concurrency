@@ -58,7 +58,11 @@ class LittleJohnModel: ObservableObject {
 			let sortedSymbols = try JSONDecoder()
 				.decode([Stock].self, from: Data(line.utf8))
 				.sorted { $0.name < $1.name }
-			tickerSymbols = sortedSymbols
+			await MainActor.run {
+				// main thread 에서 실행되게 함. tickerSymbols가 업데이트 되면 UI가 변경되기 떄문
+				tickerSymbols = sortedSymbols
+				print("Updated: \(Date())")
+			}
 		}
 	}
 	
