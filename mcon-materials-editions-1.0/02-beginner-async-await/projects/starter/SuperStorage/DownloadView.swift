@@ -52,9 +52,13 @@ struct DownloadView: View {
                 downloadSingleAction: {
                     // Download a file in a single go.
                     // fileData = try await model.download(file: file): 에러 -> downloadSingleAction가 async 클로저를 받을 수 없음. 따라서 아래처럼 수행
+                    isDownloadActive = true
                     Task {
                         // 동기 컨텍스트에서 비동기 컨텍스트를 생성하여 수행한다.
-                        fileData = try await model.download(file: file)
+                        do {
+                            fileData = try await model.download(file: file)
+                        } catch { }
+                        isDownloadActive = false
                     }
                 },
                 downloadWithUpdatesAction: {
