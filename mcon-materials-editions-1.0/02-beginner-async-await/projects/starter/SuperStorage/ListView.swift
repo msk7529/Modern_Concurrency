@@ -102,6 +102,8 @@ struct ListView: View {
                 
                 do {
                     files = try await model.availableFiles()
+                    status = try await model.stats()
+                    // 위 두 call은 이론상 비동기호출로 동시에 발생할 수 있지만, await가 마킹됨으로써 status()는 availableFiles()가 완료될 때 까지 호출되지 않는다.
                 } catch {
                     lastErrorMessage = error.localizedDescription
                 }
