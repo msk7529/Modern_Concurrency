@@ -38,6 +38,8 @@ class SuperStorageModel: ObservableObject {
     @Published var downloads: [DownloadInfo] = []
     
     func availableFiles() async throws -> [DownloadFile] {
+        print("availableFiles start.")
+        
         guard let url = URL(string: "http://localhost:8080/files/list") else {
             throw "Colud not create the URL."
         }
@@ -51,10 +53,14 @@ class SuperStorageModel: ObservableObject {
         guard let list = try? JSONDecoder().decode([DownloadFile].self, from: data) else {
             throw "The server response was not recognized."
         }
+        
+        print("availableFiles finished.")
         return list
     }
     
     func stats() async throws -> String {
+        print("stats start.")
+        
         guard let url = URL(string: "http://localhost:8080/files/status") else {
             throw "Could not create the URL."
         }
@@ -65,6 +71,7 @@ class SuperStorageModel: ObservableObject {
             throw "The server responded with an error."
         }
         
+        print("stats finished.")
         return String(decoding: data, as: UTF8.self)
     }
     

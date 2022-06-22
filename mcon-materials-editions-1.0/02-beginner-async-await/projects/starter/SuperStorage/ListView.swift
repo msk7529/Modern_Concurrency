@@ -101,9 +101,22 @@ struct ListView: View {
                 }
                 
                 do {
+                    /*
                     files = try await model.availableFiles()
                     status = try await model.stats()
                     // 위 두 call은 이론상 비동기호출로 동시에 발생할 수 있지만, await가 마킹됨으로써 status()는 availableFiles()가 완료될 때 까지 호출되지 않는다.
+                    */
+                    
+                    // async let 바인딩을 사용하면 다른언어의 Promise 개념과 유사한 로컬 상수를 만들 수 있다.
+                    // 위와 차이점은 await를 사용하지 않음으로써, 의도에 맞게 비동기로 병렬적으로 수행할 수 있다.
+                    async let files = try model.availableFiles()
+                    async let status = try model.stats()
+                    
+                    let (fileResult, statusResult) = try await (files, status)  // 이런식으로 튜플이나 구조체를 만들어서 바인딩을 그룹화한다.
+                    // 아래코드는 availableFiles()과 stats()과 완료되어야 호출된다.
+                    
+                    self.files = fileResult
+                    self.status = statusResult
                 } catch {
                     lastErrorMessage = error.localizedDescription
                 }
