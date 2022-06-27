@@ -42,6 +42,7 @@ struct DownloadView: View {
     @State var fileData: Data?
     /// Should display a download activity indicator.
     @State var isDownloadActive = false
+    @State var downloadTask: Task<Void, Error>?
     var body: some View {
         List {
             // Show the details of the selected file and download buttons.
@@ -64,10 +65,14 @@ struct DownloadView: View {
                 downloadWithUpdatesAction: {
                     // gold 버튼: Download a file with UI progress updates. 다운로드 진행률이 실시간으로 프로그레스바에 업데이트 된다.
                     isDownloadActive = true
-                    Task {
+                    downloadTask = Task {
                         do {
                             fileData = try await model.downloadWithProgress(file: file)
-                        } catch { }
+                        } catch {
+                            if let error = error as? CancellationError {
+                                print(error.localizedDescription)
+                            }
+                        }
                         isDownloadActive = false
                     }
                 },
@@ -94,6 +99,7 @@ struct DownloadView: View {
         .onDisappear {
             fileData = nil
             model.reset()
+            downloadTask?.cancel()  // downloadTask를 취소시키고 뿐만 아니라 child tasks 까지 취소시킨다.
         }
     }
 }
