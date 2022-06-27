@@ -22,3 +22,12 @@ An **async let** binding promises to provide a value or an error later on. You a
 **Task()** creates an asynchronous context for running on the current actor. It also lets you define the task’s priority.
 
 Similar to DispatchQueue.main, **MainActor** is a type that executes blocks of code, functions or properties on the main thread.
+
+3.
+**AsyncSequence** is a protocol which resembles Sequence and allows you to iterate over a sequence of values asynchronously.
+
+You iterate over a sequence asynchronously by using the for await ... in syntax, or directly creating an **AsyncIterator** and awaiting its next() method in the context of a while loop.
+
+Task offers several APIs to check if the current task was canceled. If you want to throw an error upon cancellation, use **Task.checkCancellation()**. To safely check and implement custom cancellation logic, use **Task.isCancelled**.
+
+To bind a value to a task and all its children, use the **@TaskLocal** property wrapper along with **withValue()**.
