@@ -30,6 +30,7 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 
+import Combine
 import SwiftUI
 import UIKit
 
@@ -42,7 +43,33 @@ struct DownloadView: View {
     @State var fileData: Data?
     /// Should display a download activity indicator.
     @State var isDownloadActive = false
-    @State var downloadTask: Task<Void, Error>?
+    @State var duration = ""
+    @State var downloadTask: Task<Void, Error>? {
+        didSet {
+            timerTask?.cancel()
+            
+            guard isDownloadActive else { return }
+            
+            let startTime = Date().timeIntervalSince1970
+            
+            let timerSequence = Timer
+                .publish(every: 1, tolerance: 1, on: .main, in: .common)
+                .autoconnect()
+                .map { date -> String in
+                    let duration = Int(date.timeIntervalSince1970 - startTime)
+                    return "\(duration)s"
+                }
+                .values // publisher's events에 대한 비동기 시퀀스를 반환한다.
+            
+            timerTask = Task {
+                for await duration in timerSequence {
+                    self.duration = duration
+                }
+            }
+        }
+    }
+    @State var timerTask: Task<Void, Error>?
+    
     var body: some View {
         List {
             // Show the details of the selected file and download buttons.
@@ -89,6 +116,10 @@ struct DownloadView: View {
                 // Show progress for any ongoing downloads.
                 Downloads(downloads: model.downloads)
             }
+            if !duration.isEmpty {
+              Text("Duration: \(duration)")
+                .font(.caption)
+            }
             if let fileData = fileData {
                 // Show a preview of the file if it's a valid image.
                 FilePreview(fileData: fileData)
@@ -99,6 +130,7 @@ struct DownloadView: View {
         .toolbar(content: {
             Button(action: {
                 model.stopDownloads = true
+                timerTask?.cancel()
             }, label: { Text("Cancel All") })
                 .disabled(model.downloads.isEmpty)
         })
