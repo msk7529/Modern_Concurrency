@@ -67,7 +67,12 @@ struct DownloadView: View {
                     isDownloadActive = true
                     downloadTask = Task {
                         do {
-                            fileData = try await model.downloadWithProgress(file: file)
+                            try await SuperStorageModel.$supportsPartialDownloads
+                                .withValue(file.name.hasSuffix(".jpeg"), operation: {
+                                    // jpeg파일이면 supportsPartialDownloads 프로퍼티가 true로 세팅된다.
+                                    // jpeg포맷은 이미지를 부분적으로 디코딩 할 수 있다.
+                                    fileData = try await model.downloadWithProgress(file: file)
+                                })
                         } catch {
                             if let error = error as? CancellationError {
                                 print(error.localizedDescription)
@@ -93,6 +98,7 @@ struct DownloadView: View {
         .listStyle(InsetGroupedListStyle())
         .toolbar(content: {
             Button(action: {
+                model.stopDownloads = true
             }, label: { Text("Cancel All") })
                 .disabled(model.downloads.isEmpty)
         })

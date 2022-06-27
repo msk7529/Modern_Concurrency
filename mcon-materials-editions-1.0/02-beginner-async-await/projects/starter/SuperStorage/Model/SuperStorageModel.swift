@@ -37,6 +37,8 @@ class SuperStorageModel: ObservableObject {
     /// The list of currently running downloads.
     @Published var downloads: [DownloadInfo] = []
     
+    @TaskLocal static var supportsPartialDownloads = false  // Task-local property는 타입에 대해 static 이거나, 글로벌 변수여야 한다. @TaskLocal property wraaper는 비동기 작업에 값을 바인딩 하거나, task hierarchy에 값을 삽입하는 withValue() 메서드를 제공한다.
+    
     func availableFiles() async throws -> [DownloadFile] {
         print("availableFiles start.")
         
@@ -146,6 +148,10 @@ class SuperStorageModel: ObservableObject {
                 await self.updateDownload(name: name, progress: progress)
             }
             print(accumulator.description)
+        }
+        
+        if stopDownloads, !Self.supportsPartialDownloads {
+            throw CancellationError()
         }
         
         return accumulator.data
