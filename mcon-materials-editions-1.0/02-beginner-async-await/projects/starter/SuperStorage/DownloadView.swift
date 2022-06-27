@@ -109,7 +109,14 @@ struct DownloadView: View {
                     }
                 },
                 downloadMultipleAction: {
-                    // Download a file in multiple concurrent parts.
+                    // Cloud 9 버튼: Download a file in multiple concurrent parts. 파일을 여러개로 나누어 동시에 다운로드 한다.
+                    isDownloadActive = true
+                    Task {
+                      do {
+                        fileData = try await model.multiDownloadWithProgress(file: file)
+                      } catch { }
+                      isDownloadActive = false
+                    }
                 }
             )
             if !model.downloads.isEmpty {
