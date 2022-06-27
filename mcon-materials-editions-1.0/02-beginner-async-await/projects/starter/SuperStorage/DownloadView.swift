@@ -50,7 +50,7 @@ struct DownloadView: View {
                 isDownloading: !model.downloads.isEmpty,
                 isDownloadActive: $isDownloadActive,
                 downloadSingleAction: {
-                    // Download a file in a single go.
+                    // silver 버튼: Download a file in a single go. 다운로드가 완전히 완료되면, 프로그레스바가 업데이트 된다.
                     // fileData = try await model.download(file: file): 에러 -> downloadSingleAction가 async 클로저를 받을 수 없음. 따라서 아래처럼 수행
                     isDownloadActive = true
                     Task {
@@ -62,7 +62,14 @@ struct DownloadView: View {
                     }
                 },
                 downloadWithUpdatesAction: {
-                    // Download a file with UI progress updates.
+                    // gold 버튼: Download a file with UI progress updates. 다운로드 진행률이 실시간으로 프로그레스바에 업데이트 된다.
+                    isDownloadActive = true
+                    Task {
+                        do {
+                            fileData = try await model.downloadWithProgress(file: file)
+                        } catch { }
+                        isDownloadActive = false
+                    }
                 },
                 downloadMultipleAction: {
                     // Download a file in multiple concurrent parts.

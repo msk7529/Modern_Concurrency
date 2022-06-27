@@ -46,8 +46,9 @@ class ByteAccumulator: CustomStringConvertible {
     init(name: String, size: Int) {
         self.name = name
         self.size = size
-        chunkCount = max(Int(Double(size) / 20), 1)
+        chunkCount = max(Int(Double(size) / 20), 1)     // 파일을 20개로 쪼개서 받는다고 생각. chunkSize == chuckCount
         bytes = [UInt8](repeating: 0, count: size)
+        print("init ByteAccumulator... name: \(name), size: \(size), chunkCount: \(chunkCount), bytesCount: \(bytes.count)\n======================================")
     }
     
     /// Appends a byte to the accumulator.
@@ -59,11 +60,18 @@ class ByteAccumulator: CustomStringConvertible {
     
     /// `true` if the current batch is filled with bytes.
     var isBatchCompleted: Bool {
+        if counter >= chunkCount {
+            print("isBatchCompleted... counter: \(counter), chuckCount: \(chunkCount), \(counter >= chunkCount)")
+        }
         return counter >= chunkCount
     }
     
     func checkCompleted() -> Bool {
-        defer { counter = 0 }
+        print("checkCompleted() -> \(counter == 0)... counter: \(counter)")
+        defer {
+            counter = 0
+            print("reset counter to zero\n======================================")
+        }
         return counter == 0
     }
     
@@ -73,6 +81,6 @@ class ByteAccumulator: CustomStringConvertible {
     }
     
     var description: String {
-        "[\(name)] \(sizeFormatter.string(fromByteCount: Int64(offset)))"
+        "description -> [\(name)] \(sizeFormatter.string(fromByteCount: Int64(offset)))"
     }
 }

@@ -105,7 +105,50 @@ class SuperStorageModel: ObservableObject {
             throw "Could not create the URL."
         }
         await addDownload(name: name)
-        return Data()
+        
+        let result: (downloadStream: URLSession.AsyncBytes, response: URLResponse)
+        
+        if let offset = offset {
+            // 전체 응답을 한 번에 얻어오는 대신에, 응답의 바이트 범위를 받아오도록 요청한다.
+            // 이러한 partial request을 사용하면, 파일을 여러 부분으로 나우어 병렬적으로 다운로드 받을 수 있다.
+            let urlRequest = URLRequest(url: url, offset: offset, length: size)
+            result = try await URLSession.shared.bytes(for: urlRequest, delegate: nil)
+            
+            guard (result.response as? HTTPURLResponse)?.statusCode == 206 else {
+                throw "The server responded with an error."
+            }
+        } else {
+            // partial request가 아닌 일반적인 요청을 처리하는 블럭
+            result = try await URLSession.shared.bytes(from: url, delegate: nil)
+            
+            guard (result.response as? HTTPURLResponse)?.statusCode == 200 else {
+                throw "The server responded with an error."
+            }
+        }
+        
+        // partial 또는 standard request에 관계없이 result.downloadStream 으로 사용할 수 있는 비동기 바이트 시퀀스를 얻는다.
+        
+        var asyncDownloadIterator = result.downloadStream.makeAsyncIterator()
+        var accumulator = ByteAccumulator(name: name, size: size)
+        
+        while !stopDownloads, !accumulator.checkCompleted() {
+            // checkCompleted: accumulator가 bytes를 더 받을 수 있으면 false
+            // 이 두 조건의 조합은 외부 플래그가 해제되거나, 누산기가 다운로드를 완료할 때까지 루프를 실행할 수 있는 유연성을 제공한다.
+            while !accumulator.isBatchCompleted, let byte = try await asyncDownloadIterator.next() {
+                accumulator.append(byte)
+            }
+            
+            let progress = accumulator.progress
+            
+            Task.detached(priority: .medium) {
+                // Task.detached는 동시성 모델의 효율성에 부정적인 영향을 미치므로 사용하는 것을 지양하지만, 여기서는 사용하도록 한다.
+                // detached task는 부모의 우선순위, task storage, execution actor을 상속하지 않는다.
+                await self.updateDownload(name: name, progress: progress)
+            }
+            print(accumulator.description)
+        }
+        
+        return accumulator.data
     }
     
     /// Downloads a file using multiple concurrent connections, returns the final content, and updates the download progress.
