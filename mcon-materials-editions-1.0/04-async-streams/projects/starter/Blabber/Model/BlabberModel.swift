@@ -71,27 +71,28 @@ class BlabberModel: ObservableObject {
     /// Does a countdown and sends the message.
     func countdown(to message: String) async throws {
         guard !message.isEmpty else { return }
-        
+
         // 매초마다 String value를 만드는 AsyncStream을 정의. 이러면 AsyncSequence, AsyncIteratorProtocol 구현없이 쉽게 비동기시퀀스를 만들어낼 수 있다.
-        let counter = AsyncStream<String>.init { continuation in
+        
+        let counter = AsyncStream<String>.init(String.self, bufferingPolicy: .unbounded) { continuation in
             var countdown = 3
-            
+
             Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
                 guard countdown > 0 else {
                     timer.invalidate()
                     /* finish() 말고 yield를 통해서도 시퀀스를 완료할 수 있다.
-                    continuation.yield(">>> \(message)")
+                    continuation.yield("🎉 \(message)")
                     continuation.finish()
                     */
-                    continuation.yield(with: .success(">>> \(message)"))
+                    continuation.yield(with: .success("🎉 \(message)"))
                     return
                 }
-                
+
                 continuation.yield("\(countdown)...")
                 countdown -= 1
             }
         }
-        
+
         /*
         for await countdownMessage in counter {
             try await say(countdownMessage)
@@ -100,6 +101,37 @@ class BlabberModel: ObservableObject {
         try await counter.forEach({ countdownMessage in
             try await self.say(countdownMessage)
         })
+    }
+    
+    func countdownV2(to message: String) async throws {
+        guard !message.isEmpty else { return }
+        
+        var countdown = 3
+        
+        let counter = AsyncStream<String>.init(unfolding: {
+            do {
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+            } catch {
+                return nil
+            }
+            
+            defer {
+                countdown -= 1
+            }
+            
+            switch countdown {
+            case (1...):
+                return "\(countdown)..."
+            case 0:
+                return "🎉 " + message
+            default:
+                return nil  // 시퀀스가 완료된다.
+            }
+        }, onCancel: nil)
+        
+        try await counter.forEach {
+            try await self.say($0)
+        }
     }
     
     /// Start live chat updates
