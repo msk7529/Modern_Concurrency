@@ -73,6 +73,7 @@ class BlabberModel: ObservableObject {
         print("Start live updates")
         
         try await withTaskCancellationHandler {
+            // task가 취소되면 동작하는 핸들러
             print("End live updates")
             messages = []
         } operation: {
@@ -83,6 +84,24 @@ class BlabberModel: ObservableObject {
     /// Reads the server chat stream and updates the data model.
     @MainActor
     private func readMessages(stream: URLSession.AsyncBytes) async throws {
+        var iterator = stream.lines.makeAsyncIterator()
+        
+        // 서버가 잘 동작하는지 확인하기 위해, 첫번째 응답만 받아온다.
+        guard let first = try await iterator.next() else {
+            throw "No response from server."
+        }
+        
+        guard let data = first.data(using: .utf8), let status = try? JSONDecoder().decode(ServerStatus.self, from: data) else {
+            throw "Invalid response from server"
+        }
+        
+        messages.append(Message(message: "\(status.activeUsers) active users"))
+        
+        for try await line in stream.lines {
+            if let data = line.data(using: .utf8), let update = try? JSONDecoder().decode(Message.self, from: data) {
+                messages.append(update)
+            }
+        }
     }
     
     /// Sends the user's message to the chat server
