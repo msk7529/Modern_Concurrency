@@ -31,3 +31,12 @@ You iterate over a sequence asynchronously by using the for await ... in syntax,
 Task offers several APIs to check if the current task was canceled. If you want to throw an error upon cancellation, use **Task.checkCancellation()**. To safely check and implement custom cancellation logic, use **Task.isCancelled**.
 
 To bind a value to a task and all its children, use the **@TaskLocal** property wrapper along with **withValue()**.
+
+4.
+You can use **iterators** and **loops** to implement your own processing logic when consuming an AsyncSequence.
+
+**AsyncSequence** and its partner in crime, **AsyncIteratorProtocol**, let you easily create your own asynchronous sequences.
+
+**AsyncStream** is the easiest way to create asynchronous sequences from a single Swift closure.
+
+When working with a continuation: Use **yield(_:)** to produce a value, **yield(with:)** to both produce a value and finish the sequence or **finish()** to indicate the sequence completed.
