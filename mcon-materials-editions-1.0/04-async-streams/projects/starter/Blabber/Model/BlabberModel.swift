@@ -51,9 +51,20 @@ class BlabberModel: ObservableObject {
     }
     
     func observeAppStatus() async {
-        for await _ in await NotificationCenter.default.notifications(for: UIApplication.willResignActiveNotification) {
-            // 다른 앱으로 전환하거나, 백그라운드로 내려가서 현재 앱이 더 이상 활성화되지 않으면 notification post
-            try? await say("\(username) went away", isSystemMessage: true)
+        // 그냥 두개의 for await 코드만 작성하면 두번째 for문은 첫번째 루프가 끝나기 전까진 실행되지 않는다.
+        // 두 루프는 병렬로 실행되어야 하므로 각각을 Task로 감싸서 분리시킨다.
+        Task {
+            for await _ in await NotificationCenter.default.notifications(for: UIApplication.willResignActiveNotification) {
+                // 다른 앱으로 전환하거나, 백그라운드로 내려가서 현재 앱이 더 이상 활성화되지 않으면 notification post
+                try? await say("\(username) went away", isSystemMessage: true)
+            }
+        }
+        
+        Task {
+            for await _ in await NotificationCenter.default.notifications(for: UIApplication.didBecomeActiveNotification) {
+                // 다른 앱으로 전환하거나, 백그라운드로 내려가서 현재 앱이 더 이상 활성화되지 않으면 notification post
+                try? await say("\(username) came back", isSystemMessage: true)
+            }
         }
     }
     
