@@ -50,6 +50,13 @@ class BlabberModel: ObservableObject {
     func shareLocation() async throws {
     }
     
+    func observeAppStatus() async {
+        for await _ in await NotificationCenter.default.notifications(for: UIApplication.willResignActiveNotification) {
+            // 다른 앱으로 전환하거나, 백그라운드로 내려가서 현재 앱이 더 이상 활성화되지 않으면 notification post
+            try? await say("\(username) went away", isSystemMessage: true)
+        }
+    }
+    
     /// Does a countdown and sends the message.
     func countdown(to message: String) async throws {
         guard !message.isEmpty else { return }
@@ -120,6 +127,14 @@ class BlabberModel: ObservableObject {
         }
         
         messages.append(Message(message: "\(status.activeUsers) active users"))
+        
+        let notifications = Task {
+            await observeAppStatus()
+        }
+        
+        defer {
+            notifications.cancel()
+        }
         
         for try await line in stream.lines {
             if let data = line.data(using: .utf8), let update = try? JSONDecoder().decode(Message.self, from: data) {
