@@ -38,3 +38,11 @@ extension String: LocalizedError {
         return self
     }
 }
+
+extension AsyncSequence {
+    func forEach(_ body: (Element) async throws -> Void) async throws {
+        for try await element in self {
+            try await body(element)
+        }
+    }
+}

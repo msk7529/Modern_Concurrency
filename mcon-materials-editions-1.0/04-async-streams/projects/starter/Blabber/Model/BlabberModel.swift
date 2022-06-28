@@ -92,9 +92,14 @@ class BlabberModel: ObservableObject {
             }
         }
         
+        /*
         for await countdownMessage in counter {
             try await say(countdownMessage)
         }
+        */
+        try await counter.forEach({ countdownMessage in
+            try await self.say(countdownMessage)
+        })
     }
     
     /// Start live chat updates
