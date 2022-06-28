@@ -53,6 +53,30 @@ class BlabberModel: ObservableObject {
     /// Does a countdown and sends the message.
     func countdown(to message: String) async throws {
         guard !message.isEmpty else { return }
+        
+        // 매초마다 String value를 만드는 AsyncStream을 정의. 이러면 AsyncSequence, AsyncIteratorProtocol 구현없이 쉽게 비동기시퀀스를 만들어낼 수 있다.
+        let counter = AsyncStream<String>.init { continuation in
+            var countdown = 3
+            
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                guard countdown > 0 else {
+                    timer.invalidate()
+                    /* finish() 말고 yield를 통해서도 시퀀스를 완료할 수 있다.
+                    continuation.yield(">>> \(message)")
+                    continuation.finish()
+                    */
+                    continuation.yield(with: .success(">>> \(message)"))
+                    return
+                }
+                
+                continuation.yield("\(countdown)...")
+                countdown -= 1
+            }
+        }
+        
+        for await countdownMessage in counter {
+            try await say(countdownMessage)
+        }
     }
     
     /// Start live chat updates
