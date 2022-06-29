@@ -55,6 +55,25 @@ class BlabberModel: ObservableObject {
             self?.delegate = ChatLocationDelegate(continuation: continuation)
         })
         print(location.description)
+        
+        let address: String = try await withCheckedThrowingContinuation({ continuation in
+            AddressEncoder.addressFor(location: location) { address, error in
+                // 위치를 사람이 읽을 수 있는 주소로 바꾼다.
+                switch (address, error) {
+                case (nil, let error?):
+                    continuation.resume(throwing: error)
+                case (let address?, nil):
+                    continuation.resume(returning: address)
+                case (nil, nil):
+                    continuation.resume(throwing: "Address encoding failed.")
+                case let (address?, error?):
+                    continuation.resume(returning: address)
+                    print(error)
+                }
+            }
+        })
+        
+        try await say("📍 \(address)")
     }
     
     func observeAppStatus() async {
