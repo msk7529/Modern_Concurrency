@@ -34,4 +34,46 @@ import Foundation
 import CoreLocation
 
 class ChatLocationDelegate: NSObject, CLLocationManagerDelegate {
+    
+    typealias LocationContinuation = CheckedContinuation<CLLocation, Error>
+    
+    private var continuation: LocationContinuation?
+    private let manager: CLLocationManager = .init()
+    
+    init(continuation: LocationContinuation) {
+        self.continuation = continuation
+        super.init()
+        
+        manager.delegate = self
+        manager.requestWhenInUseAuthorization()
+    }
+    
+    // MARK: - CLLocationManagerDelegate
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        // 위치 권한이 업데이트되면 호출되는 딜리게이트 메서드
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            // 권한요청에 아직 응답하지 않은 경우
+            break
+        case .authorizedAlways, .authorizedWhenInUse:
+            manager.startUpdatingLocation()
+        default:
+            continuation?.resume(throwing: "The app isn't authorized to use location data")
+            continuation = nil  // resume은 한 번만 수행해야하므로, nil로 설정
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        // 사용자의 위치가 업데이트 될 때 호출되는 딜리게이트 메서드
+        guard let location = locations.first else { return }
+        continuation?.resume(returning: location)
+        continuation = nil
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        // 사용자의 위치를 가지오지 못하면 호출되는 딜리게이트 메서드
+        continuation?.resume(throwing: error)
+        continuation = nil
+    }
 }
