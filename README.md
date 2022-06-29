@@ -40,3 +40,10 @@ You can use **iterators** and **loops** to implement your own processing logic w
 **AsyncStream** is the easiest way to create asynchronous sequences from a single Swift closure.
 
 When working with a continuation: Use **yield(_:)** to produce a value, **yield(with:)** to both produce a value and finish the sequence or **finish()** to indicate the sequence completed.
+
+5.
+You bridge **older asynchronous design patterns to async/await** by using **CheckedContinuation** or its unsafe counterpart, UnsafeCheckedContinuation.
+
+For each of your code paths, you need to call one of the continuation’s resume(...) methods **exactly once** to either return a value or throw an error.
+
+You get a continuation by calling either **withCheckedContinuation(_:)** or **withCheckedThrowingContinuation(_:)**.
