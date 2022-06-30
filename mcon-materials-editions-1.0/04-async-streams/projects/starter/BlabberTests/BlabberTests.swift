@@ -67,5 +67,28 @@ class BlabberTests: XCTestCase {
                 print(request)
             }
         }).value
+        
+        // 테스트가 실패하는 이유는, 작업이 순서대로 수행되고 저장된 요청 스트림을 읽기 시작하기 전에 카운트다운이 완료되기 때문.
+        // countdownV2가 수행되면 TestURLProtocol의 lastRequest가 총 4번 세팅되는데, 그 때는 continuation이 세팅되기 전이기 때문에 yield가 수행되지 않음
+        // countdownV2가 완료되고 나서야 for문이 수행되는데, 여기서 TestURLProtocol.requests에 접근해봤자 아무일도 일어나지 않음.
+    }
+    
+    func testModelCountdown2() async throws {
+        async let countdown: Void = model.countdownV2(to: "Tada!")
+        async let messages = TimeoutTask(seconds: 10) {
+            await TestURLProtocol.requests
+                .prefix(4)  // 3개의 요청만 받을 경우 테스트가 끝나지 않을 것이기 떄문에 Message를 TimeoutTask에 래핑한다.
+                .compactMap { $0.httpBody }
+                .compactMap { data in
+                    try? JSONDecoder().decode(Message.self, from: data).message
+                }.reduce(into: []) { result, request in
+                    result.append(request)
+                }
+        }.value
+        
+        // 두 개의 바인딩이 준비되면, 두 개를 동시에 받아온다.
+        let (messageResult, _) = try await (messages, countdown)
+        
+        XCTAssertEqual(["3...", "2...", "1...", "🎉 Tada!"], messageResult)
     }
 }
