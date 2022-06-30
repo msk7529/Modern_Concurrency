@@ -59,4 +59,11 @@ class BlabberTests: XCTestCase {
         XCTAssertEqual(message.message, "Hello!")
     }
     
+    func testModelCountdown() async throws {
+        try await model.countdown(to: "Tada!")
+        
+        for await request in TestURLProtocol.requests {
+            print(request)
+        }
+    }
 }
