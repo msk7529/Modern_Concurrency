@@ -47,3 +47,14 @@ You bridge **older asynchronous design patterns to async/await** by using **Chec
 For each of your code paths, you need to call one of the continuation’s resume(...) methods **exactly once** to either return a value or throw an error.
 
 You get a continuation by calling either **withCheckedContinuation(_:)** or **withCheckedThrowingContinuation(_:)**.
+
+6.
+Annotate your test method with **async** to enable testing asynchronous code.
+
+Use **await** with asynchronous functions to verify their output or side effects after they resume.
+
+Use either **mock types** for your dependencies or the **real type**, if you can configure it for testing.
+
+To test time-sensitive asynchronous code, run **concurrent tasks** to both trigger the code under test and observe its output or side effects.
+
+**await** can suspend indefinitely. So, when testing, it’s a good idea to set a **timeout** for the tested asynchronous APIs whenever possible.
