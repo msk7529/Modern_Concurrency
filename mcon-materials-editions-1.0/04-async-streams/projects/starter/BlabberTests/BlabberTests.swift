@@ -60,10 +60,12 @@ class BlabberTests: XCTestCase {
     }
     
     func testModelCountdown() async throws {
-        try await model.countdown(to: "Tada!")
+        try await model.countdownV2(to: "Tada!")    // countdown 메서드는 왜 테스트가 끝나질 않지.. Timer를 UnitTest에서는 쓸 때 오류가 있나?
         
-        for await request in TestURLProtocol.requests {
-            print(request)
-        }
+        try await TimeoutTask(seconds: 10, operation: {
+            for await request in TestURLProtocol.requests {
+                print(request)
+            }
+        }).value
     }
 }
