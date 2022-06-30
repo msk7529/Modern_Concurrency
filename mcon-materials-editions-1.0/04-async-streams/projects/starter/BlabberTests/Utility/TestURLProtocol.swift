@@ -34,11 +34,16 @@ import Foundation
 
 /// A catch-all URL protocol that returns successful response and records all requests.
 class TestURLProtocol: URLProtocol {
+    
+    static var lastRequest: URLRequest?
+    
     override class func canInit(with request: URLRequest) -> Bool {
+        // 주어진 request를 핸들링 할 때 true. 모든 request들을 캐치하기 위해 true로 설정
         return true
     }
     
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        // request를 변경할 때 사용. 지금은 변경할 일이 없음.
         return request
     }
     
@@ -52,6 +57,14 @@ class TestURLProtocol: URLProtocol {
         client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client.urlProtocol(self, didLoad: Data())
         client.urlProtocolDidFinishLoading(self)
+        
+        guard let stream = request.httpBodyStream else {
+            fatalError("Unexpected test scenario.")
+        }
+        
+        var request = request
+        request.httpBody = stream.data
+        Self.lastRequest = request
     }
     
     override func stopLoading() {

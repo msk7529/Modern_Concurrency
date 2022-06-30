@@ -34,4 +34,29 @@ import XCTest
 @testable import Blabber
 
 class BlabberTests: XCTestCase {
+    
+    let model: BlabberModel = {
+        let model: BlabberModel = .init()
+        model.username = "test"
+        
+        let testConfiguration = URLSessionConfiguration.default
+        testConfiguration.protocolClasses = [TestURLProtocol.self]
+        
+        model.urlSession = URLSession(configuration: testConfiguration)
+        return model
+    }()
+    
+    func testMoelSay() async throws {
+        try await model.say("Hello!")
+        
+        let request = try XCTUnwrap(TestURLProtocol.lastRequest)
+        // 올바른 URL로 요청을 보냈는지 검증
+        XCTAssertEqual(request.url?.absoluteString, "http://localhost:8080/chat/say")
+        
+        let httpBody = try XCTUnwrap(request.httpBody)
+        let message = try XCTUnwrap(try? JSONDecoder().decode(Message.self, from: httpBody))
+        // 메시지를 올바르게 보냈는지 검증
+        XCTAssertEqual(message.message, "Hello!")
+    }
+    
 }
