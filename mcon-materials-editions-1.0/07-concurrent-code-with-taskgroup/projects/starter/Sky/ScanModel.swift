@@ -82,14 +82,22 @@ class ScanModel: ObservableObject {
         print(scans)
         */
         
-        await withTaskGroup(of: String.self, body: { [unowned self] group in
+        let scans = await withTaskGroup(of: String.self, body: { [unowned self] group -> [String] in
             for number in 0..<total {
                 // addTask는 그 즉시 리턴된다. 즉, 20개의 작업들은 작업들이 시작하기 전에 이미 스케쥴된다.
                 group.addTask {
                     await self.worker(number: number)
                 }
             }
+            
+            return await group
+                .reduce(into: [String]()) { result, string in
+                    result.append(string)
+                }
         })
+        
+        // TaskGroup은 시스템 리소스에 최적화하는데 적합하다고 판단되는 Task의 순서대로 실행하기 때문에 scans는 오름차순을 보장하지 못한다.
+        print("runAllTasks() finished... \(scans)")
     }
 }
 
