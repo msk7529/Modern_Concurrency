@@ -70,7 +70,8 @@ struct SkyApp: App {
                             do {
                                 let start = Date().timeIntervalSinceReferenceDate
                                 // try await scanModel.runAllTasks()
-                                try await scanModel.runAllTaskWithProcessingTaskResultsInRealTime()
+                                // try await scanModel.runAllTaskWithProcessingTaskResultsInRealTime()
+                                try await scanModel.runAllTaskWithBatchSize()
                                 let end = Date().timeIntervalSinceReferenceDate
                                 lastMessage = String(
                                     format: "Finished %d scans in %.2f seconds.",

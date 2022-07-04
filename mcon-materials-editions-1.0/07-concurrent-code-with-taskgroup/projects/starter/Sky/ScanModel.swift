@@ -116,6 +116,33 @@ class ScanModel: ObservableObject {
             print("runAllTaskWithProcessingTaskResultsInRealTime() finished...")
         })
     }
+    
+    func runAllTaskWithBatchSize() async throws {
+        // runAllTaskWithProcessingTaskResultsInRealTime와 유사하나, 동시에 4개 이하의 작업을 실행하도록 제한하여 앱이 시스템에 과부하를 주지 않도록 한다.
+        await withTaskGroup(of: String.self, body: { [unowned self] group in
+            let batchSize = 4
+            
+            for index in 0..<batchSize {
+                group.addTask {
+                    await self.worker(number: index)
+                }
+            }
+            
+            var index = batchSize
+            
+            for await result in group {
+                print("Completed: \(result)")
+                
+                if index < total {
+                    group.addTask { [index] in  // index 캡처
+                        await self.worker(number: index)
+                    }
+                    index += 1
+                }
+            }
+            print("runAllTaskWithBatchSize() finished...")
+        })
+    }
 }
 
 // MARK: - Tracking task progress.
