@@ -71,12 +71,22 @@ class ScanModel: ObservableObject {
     func runAllTasks() async throws {
         started = Date()
         
+        /*
         var scans: [String] = []
         for number in 0..<total {
             // Dispatcher가 몇 개의 스레드를 사용하던지에 관계없이, 이 코드가 다음 실행을 block 하게 된다. 즉 직렬로 수행하게 됨.
             scans.append(await worker(number: number))
         }
         print(scans)
+        */
+        
+        await withTaskGroup(of: String.self, body: { [unowned self] group in
+            for number in 0..<total {
+                group.addTask {
+                    await self.worker(number: number)
+                }
+            }
+        })
     }
 }
 
