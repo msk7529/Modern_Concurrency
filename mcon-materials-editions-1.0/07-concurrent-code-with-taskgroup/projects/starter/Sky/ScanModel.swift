@@ -96,6 +96,12 @@ class ScanModel: ObservableObject {
                 }
         })
         
+        await MainActor.run {
+            completed = 0
+            countPerSecond = 0
+            scheduled = 0
+        }
+        
         // TaskGroup은 시스템 리소스에 최적화하는데 적합하다고 판단되는 Task의 순서대로 실행하기 때문에 scans는 오름차순을 보장하지 못한다.
         print("runAllTasks() finished... \(scans)")
     }
@@ -112,6 +118,12 @@ class ScanModel: ObservableObject {
             
             for await result in group {
                 print("Completed: \(result)")
+            }
+            
+            await MainActor.run {
+                completed = 0
+                countPerSecond = 0
+                scheduled = 0
             }
             print("runAllTaskWithProcessingTaskResultsInRealTime() finished...")
         })
@@ -139,6 +151,14 @@ class ScanModel: ObservableObject {
                     }
                     index += 1
                 }
+            }
+            
+            await MainActor.run {
+                // 작업이 모두 완료되어 UI 업데이트.
+                // group.waitForAll()을 사용하여 모든 작업을 기다리게 할 수도 있으나, 어차피 위에서 for await를 사용하였기 때문에 이 코드는 이미 모든 작업이 완료된 후에 수행된다.
+                completed = 0
+                countPerSecond = 0
+                scheduled = 0
             }
             print("runAllTaskWithBatchSize() finished...")
         })
