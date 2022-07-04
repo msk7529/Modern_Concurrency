@@ -63,6 +63,8 @@ class ScanModel: ObservableObject {
         
         let task = ScanTask(input: number)
         let result = await task.run()
+        // run이 완료되면, 동시성시스템은 이제 다른 스케쥴된 task를 실행할지, 아니면 완료된 작업을 재개할지 결정한다. 이 때 우선순위를 따로 주지 않으면, 먼저 요청한 순서대로 작업이 이루어진다.
+        // priority를 지정하지 않으면 Task는 부모의 우선순위를 갖게되며, 이 경우는 메인 스레드에서 origin Task가 수행되었으므로 .userInitiated가 된다.
         
         await onTaskCompleted()
         return result
@@ -82,6 +84,7 @@ class ScanModel: ObservableObject {
         
         await withTaskGroup(of: String.self, body: { [unowned self] group in
             for number in 0..<total {
+                // addTask는 그 즉시 리턴된다. 즉, 20개의 작업들은 작업들이 시작하기 전에 이미 스케쥴된다.
                 group.addTask {
                     await self.worker(number: number)
                 }
