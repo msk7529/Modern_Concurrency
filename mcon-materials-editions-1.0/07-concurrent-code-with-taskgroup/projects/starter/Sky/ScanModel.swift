@@ -159,7 +159,12 @@ class ScanModel: ObservableObject {
             var index = batchSize
             
             for try await result in group {
-                print("Completed: \(result)")
+                switch result {
+                case .success(let result):
+                    print("Completed: \(result)")
+                case .failure(let error):
+                    print("Failed: \(error.localizedDescription)")
+                }
                 
                 if index < total {
                     group.addTask { [index] in  // index 캡처
