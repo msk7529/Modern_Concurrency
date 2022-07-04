@@ -86,7 +86,7 @@ class ScanModel: ObservableObject {
             for number in 0..<total {
                 // addTask는 그 즉시 리턴된다. 즉, 20개의 작업들은 작업들이 시작하기 전에 이미 스케쥴된다.
                 group.addTask {
-                    await self.worker(number: number)
+                    await self.worker(number: number)   // 병렬로 수행되므로, data race condition이 발생하지 않는지 반드시 확인해야한다. 대부분의 경우 컴파일러는 race condition 여부를 체크하지 못한다.
                 }
             }
             
@@ -98,6 +98,23 @@ class ScanModel: ObservableObject {
         
         // TaskGroup은 시스템 리소스에 최적화하는데 적합하다고 판단되는 Task의 순서대로 실행하기 때문에 scans는 오름차순을 보장하지 못한다.
         print("runAllTasks() finished... \(scans)")
+    }
+    
+    func runAllTaskWithProcessingTaskResultsInRealTime() async throws {
+        // runAllTask와 유사하나, 실시간으로 작업 결과를 처리할 수 있다.
+        
+        await withTaskGroup(of: String.self, body: { [unowned self] group in
+            for number in 0..<total {
+                group.addTask {
+                    await self.worker(number: number)
+                }
+            }
+            
+            for await result in group {
+                print("Completed: \(result)")
+            }
+            print("runAllTaskWithProcessingTaskResultsInRealTime() finished...")
+        })
     }
 }
 
