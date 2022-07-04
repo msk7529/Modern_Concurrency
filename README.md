@@ -58,3 +58,14 @@ Use either **mock types** for your dependencies or the **real type**, if you can
 To test time-sensitive asynchronous code, run **concurrent tasks** to both trigger the code under test and observe its output or side effects.
 
 **await** can suspend indefinitely. So, when testing, it’s a good idea to set a **timeout** for the tested asynchronous APIs whenever possible.
+
+
+7.
+
+To run an arbitrary number of concurrent tasks, create a **task group**. Do this by using the function withTaskGroup(of:returning:body:). For a throwing task group, use withThrowingTaskGroup(of:returning:body:).
+
+You can **add tasks** to a group by calling addTask(priority:operation:) or addTaskUnlessCancelled(priority:operation:).
+
+Control task execution by **canceling the group** via cancelAll() or **waiting for all tasks to complete** with waitForAll().
+
+Use the group as an **asynchronous sequence** to iterate over each task result in real time.
