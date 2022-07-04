@@ -58,11 +58,11 @@ class ScanModel: ObservableObject {
         self.total = total
     }
     
-    func worker(number: Int) async -> String {
+    func worker(number: Int) async throws -> String {
         await onScheduled()
         
         let task = ScanTask(input: number)
-        let result = await task.run()
+        let result = try await task.run()
         // run이 완료되면, 동시성시스템은 이제 다른 스케쥴된 task를 실행할지, 아니면 완료된 작업을 재개할지 결정한다. 이 때 우선순위를 따로 주지 않으면, 먼저 요청한 순서대로 작업이 이루어진다.
         // priority를 지정하지 않으면 Task는 부모의 우선순위를 갖게되며, 이 경우는 메인 스레드에서 origin Task가 수행되었으므로 .userInitiated가 된다.
         
@@ -82,15 +82,15 @@ class ScanModel: ObservableObject {
         print(scans)
         */
         
-        let scans = await withTaskGroup(of: String.self, body: { [unowned self] group -> [String] in
+        let scans = try await withThrowingTaskGroup(of: String.self, body: { [unowned self] group -> [String] in
             for number in 0..<total {
                 // addTask는 그 즉시 리턴된다. 즉, 20개의 작업들은 작업들이 시작하기 전에 이미 스케쥴된다.
                 group.addTask {
-                    await self.worker(number: number)   // 병렬로 수행되므로, data race condition이 발생하지 않는지 반드시 확인해야한다. 대부분의 경우 컴파일러는 race condition 여부를 체크하지 못한다.
+                    try await self.worker(number: number)   // 병렬로 수행되므로, data race condition이 발생하지 않는지 반드시 확인해야한다. 대부분의 경우 컴파일러는 race condition 여부를 체크하지 못한다.
                 }
             }
             
-            return await group
+            return try await group
                 .reduce(into: [String]()) { result, string in
                     result.append(string)
                 }
@@ -109,14 +109,14 @@ class ScanModel: ObservableObject {
     func runAllTaskWithProcessingTaskResultsInRealTime() async throws {
         // runAllTask와 유사하나, 실시간으로 작업 결과를 처리할 수 있다.
         
-        await withTaskGroup(of: String.self, body: { [unowned self] group in
+        try await withThrowingTaskGroup(of: String.self, body: { [unowned self] group in
             for number in 0..<total {
                 group.addTask {
-                    await self.worker(number: number)
+                    try await self.worker(number: number)
                 }
             }
             
-            for await result in group {
+            for try await result in group {
                 print("Completed: \(result)")
             }
             
@@ -131,23 +131,23 @@ class ScanModel: ObservableObject {
     
     func runAllTaskWithBatchSize() async throws {
         // runAllTaskWithProcessingTaskResultsInRealTime와 유사하나, 동시에 4개 이하의 작업을 실행하도록 제한하여 앱이 시스템에 과부하를 주지 않도록 한다.
-        await withTaskGroup(of: String.self, body: { [unowned self] group in
+        try await withThrowingTaskGroup(of: String.self, body: { [unowned self] group in
             let batchSize = 4
             
             for index in 0..<batchSize {
                 group.addTask {
-                    await self.worker(number: index)
+                    try await self.worker(number: index)
                 }
             }
             
             var index = batchSize
             
-            for await result in group {
+            for try await result in group {
                 print("Completed: \(result)")
                 
                 if index < total {
                     group.addTask { [index] in  // index 캡처
-                        await self.worker(number: index)
+                        try await self.worker(number: index)
                     }
                     index += 1
                 }

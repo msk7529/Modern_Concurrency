@@ -44,7 +44,9 @@ struct ScanTask: Identifiable {
     
     /// A method that performs the scanning.
     /// > Note: This is a mock method that just suspends for a second.
-    func run() async -> String {
+    func run() async throws -> String {
+        try await UnreliableAPI.shared.action(failingEvery: 10)     // 10번째마다 에러를 발생시킨다.
+        
         await Task(priority: .medium) {
             // Task에 medium의 우선순위를 주어 UI 업데이트가 바로바로 이루어지도록 한다. 즉, 스케쥴러는 다음 스캔을 시작하는 것보다 완료된 스캔 후 재개를 선호해야 한다.(그래야 자연스러워 보이니까)
             // 우선순위를 높게 한다고 해서, 작업 자체가 더 빨라지는건 아님. 단지 실행큐의 앞으로 데려오는 것 뿐.
