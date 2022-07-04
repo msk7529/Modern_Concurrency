@@ -70,6 +70,22 @@ class ScanModel: ObservableObject {
         return result
     }
     
+    func workerWithResultReturnType(number: Int) async -> Result<String, Error> {
+        await onScheduled()
+        
+        let task = ScanTask(input: number)
+        
+        let result: Result<String, Error>
+        do {
+            result = try .success(await task.run())
+        } catch {
+            result = .failure(error)
+        }
+        
+        await onTaskCompleted()
+        return result
+    }
+    
     func runAllTasks() async throws {
         started = Date()
         
@@ -109,10 +125,10 @@ class ScanModel: ObservableObject {
     func runAllTaskWithProcessingTaskResultsInRealTime() async throws {
         // runAllTask와 유사하나, 실시간으로 작업 결과를 처리할 수 있다.
         
-        try await withThrowingTaskGroup(of: String.self, body: { [unowned self] group in
+        try await withThrowingTaskGroup(of: Result<String, Error>.self, body: { [unowned self] group in
             for number in 0..<total {
                 group.addTask {
-                    try await self.worker(number: number)
+                    await self.workerWithResultReturnType(number: number)
                 }
             }
             
@@ -131,12 +147,12 @@ class ScanModel: ObservableObject {
     
     func runAllTaskWithBatchSize() async throws {
         // runAllTaskWithProcessingTaskResultsInRealTime와 유사하나, 동시에 4개 이하의 작업을 실행하도록 제한하여 앱이 시스템에 과부하를 주지 않도록 한다.
-        try await withThrowingTaskGroup(of: String.self, body: { [unowned self] group in
+        try await withThrowingTaskGroup(of: Result<String, Error>.self, body: { [unowned self] group in
             let batchSize = 4
             
             for index in 0..<batchSize {
                 group.addTask {
-                    try await self.worker(number: index)
+                    await self.workerWithResultReturnType(number: index)
                 }
             }
             
@@ -147,7 +163,7 @@ class ScanModel: ObservableObject {
                 
                 if index < total {
                     group.addTask { [index] in  // index 캡처
-                        try await self.worker(number: index)
+                        await self.workerWithResultReturnType(number: index)
                     }
                     index += 1
                 }
