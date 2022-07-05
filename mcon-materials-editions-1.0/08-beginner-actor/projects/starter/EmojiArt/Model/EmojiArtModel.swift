@@ -36,6 +36,23 @@ import UIKit
 class EmojiArtModel: ObservableObject {
     @Published private(set) var imageFeed: [ImageFile] = []
     
+    private(set) var verifiedCount: Int = 0     // 동시에 업데이트할 verification 카운터
+    
+    /// 개별 미술작품을 verify 하는 메서드
+    func verifyImages() async throws {
+        try await withThrowingTaskGroup(of: Void.self, body: { group in
+            // 동시에 병렬적으로 작업 수행
+            imageFeed.forEach { file in
+                group.addTask { [unowned self] in
+                    try await Checksum.verify(file.checksum)
+                    self.verifiedCount += 1
+                }
+            }
+            
+            try await group.waitForAll()
+        })
+    }
+    
     func loadImages() async throws {
         imageFeed.removeAll()
         guard let url = URL(string: "http://localhost:8080/gallery/images") else {
