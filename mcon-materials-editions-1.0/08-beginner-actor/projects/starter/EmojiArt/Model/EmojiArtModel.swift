@@ -33,19 +33,24 @@
 import Foundation
 import UIKit
 
-class EmojiArtModel: ObservableObject {
-    @Published private(set) var imageFeed: [ImageFile] = []
+actor EmojiArtModel: ObservableObject {
+    @Published @MainActor private(set) var imageFeed: [ImageFile] = []
     
     private(set) var verifiedCount: Int = 0     // 동시에 업데이트할 verification 카운터
+    
+    private func increaseVerifiedCount() {
+        verifiedCount += 1
+    }
     
     /// 개별 미술작품을 verify 하는 메서드
     func verifyImages() async throws {
         try await withThrowingTaskGroup(of: Void.self, body: { group in
             // 동시에 병렬적으로 작업 수행
-            imageFeed.forEach { file in
+            await imageFeed.forEach { file in
                 group.addTask { [unowned self] in
                     try await Checksum.verify(file.checksum)
-                    self.verifiedCount += 1
+                    // self.verifiedCount += 1
+                    await self.increaseVerifiedCount()
                 }
             }
             
@@ -54,18 +59,26 @@ class EmojiArtModel: ObservableObject {
     }
     
     func loadImages() async throws {
-        imageFeed.removeAll()
+        await MainActor.run {
+            imageFeed.removeAll()
+        }
+        
         guard let url = URL(string: "http://localhost:8080/gallery/images") else {
             throw "Could not create endpoint URL"
         }
+        
         let (data, response) = try await URLSession.shared.data(from: url, delegate: nil)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw "The server responded with an error."
         }
+        
         guard let list = try? JSONDecoder().decode([ImageFile].self, from: data) else {
             throw "The server response was not recognized."
         }
-        imageFeed = list
+        
+        await MainActor.run {
+            imageFeed = list
+        }
     }
     
     /// Downloads an image and returns its content.
