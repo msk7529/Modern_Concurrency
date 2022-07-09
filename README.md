@@ -69,3 +69,16 @@ You can **add tasks** to a group by calling addTask(priority:operation:) or addT
 Control task execution by **canceling the group** via cancelAll() or **waiting for all tasks to complete** with waitForAll().
 
 Use the group as an **asynchronous sequence** to iterate over each task result in real time.
+
+
+8.
+
+The **actor** type is a thread-safe type that protects its internals from concurrent access, supported by compile-time checks and diagnostics.
+
+Actors allow **“internal” synchronous access** to their state while the compiler enforces **asynchronous calls for access** from the “outside”.
+
+Actor methods prefixed with the **nonisolated** keyword behave as standard class methods and provide no isolation mechanics.
+
+Actors use a runtime-managed **serial executor** to serialize calls to methods and access to properties.
+
+The **Sendable** protocol indicates a value is safe to use in a concurrent context. The **@Sendable** attribute requires a sendable value for a method or a closure parameter.
