@@ -43,6 +43,7 @@ struct AppMain: App {
             VStack {
                 if isVerified {
                     ListView()
+                        .environmentObject(ImageLoader())   // 이미지가 필요한 모든 뷰에서 ImageLoader를 사용할 수 있다.
                 } else {
                     LoadingView(isVerified: $isVerified)
                 }

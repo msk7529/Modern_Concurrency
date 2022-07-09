@@ -37,6 +37,8 @@ struct ThumbImage: View {
     @State var image = UIImage()
     @State var overlay = ""
     
+    @EnvironmentObject var imageLoader: ImageLoader     // 주입된 ImageLoader를 초기화한다.
+    
     @MainActor func updateImage(_ image: UIImage) {
         self.image = image
     }
@@ -50,6 +52,13 @@ struct ThumbImage: View {
                 if !overlay.isEmpty {
                     Image(systemName: overlay)
                 }
+            }
+            .task {
+                guard let image = try? await imageLoader.image(file.url) else {
+                    overlay = "camera.metering.unknown"
+                    return
+                }
+                updateImage(image)
             }
     }
 }
