@@ -47,7 +47,11 @@ struct BottomToolbar: View {
             })
             
             Button(action: {
-                // Clear in-memory cache
+                Task {
+                    // Clear in-memory cache
+                    await ImageDatabase.shared.clearInMemoryAssets()
+                    try await model.loadImages()
+                }
             }, label: {
                 Image(systemName: "square.stack.3d.up.slash")
             })
