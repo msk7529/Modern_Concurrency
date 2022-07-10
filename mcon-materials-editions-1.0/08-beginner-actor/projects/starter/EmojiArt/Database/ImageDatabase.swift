@@ -47,6 +47,7 @@ import UIKit
         for fileURL in try await storage.persistedFiles() {
             storedImagesIndex.insert(fileURL.lastPathComponent)
         }
+        await imageLoader.setUp()
     }
     
     func store(image: UIImage, forKey key: String) async throws {

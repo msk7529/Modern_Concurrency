@@ -39,7 +39,30 @@ actor ImageLoader: ObservableObject {
         case failed
     }
     
+    private var inMemoryAccessCounter = 0 {
+        didSet {
+            inMemoryAcccessContinuation?.yield(inMemoryAccessCounter)
+        }
+    }
+
+    @MainActor private(set) var inMemoryAccess: AsyncStream<Int>?
+    private var inMemoryAcccessContinuation: AsyncStream<Int>.Continuation?
+    
     private(set) var cache: [String: DownloadState] = [:]
+    
+    deinit {
+        inMemoryAcccessContinuation?.finish()
+    }
+    
+    func setUp() async {
+        // 스트림 초기화
+        let accessStream = AsyncStream<Int> { continuation in
+            inMemoryAcccessContinuation = continuation
+        }
+        await MainActor.run {
+            inMemoryAccess = accessStream
+        }
+    }
     
     func add(_ image: UIImage, forKey key: String) {
         cache[key] = .completed(image)
@@ -50,6 +73,7 @@ actor ImageLoader: ObservableObject {
             switch cached {
             case .completed(let image):
                 // 이미 다운로드 완료된 이미지이면 UIImage를 리턴
+                inMemoryAccessCounter += 1
                 return image
             case .inProgress(let task):
                 // 다운로드 진행중인 이미지이면, 연결된 작업을 기다리고 task.value를 반환한다.
