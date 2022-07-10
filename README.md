@@ -82,3 +82,14 @@ Actor methods prefixed with the **nonisolated** keyword behave as standard class
 Actors use a runtime-managed **serial executor** to serialize calls to methods and access to properties.
 
 The **Sendable** protocol indicates a value is safe to use in a concurrent context. The **@Sendable** attribute requires a sendable value for a method or a closure parameter.
+
+9.
+
+**Global actors** protect the global mutable state within your app.
+
+Use **@globalActor** to annotate an actor as global and make it conform to the GlobalActor protocol.
+
+Use a global actor’s **serial executor** to form concurrency-safe silos out of code that needs to work with the same mutable state.
+
+Use a mix of **actors** and **global actors**, along with **async/await** and **asynchronous sequences**, to make your concurrent code safe.
+
