@@ -32,8 +32,10 @@
 
 import Foundation
 
-class DiskStorage {
+@ImageDatabase class DiskStorage {
     // 앱 캐시에서 파일 읽기, 쓰기 및 삭제와 같은 간단한 파일 작업
+    // DiskStorage를 actor로 만들면 ImageDatabase와 DiskStorage 액터간의 중복전환이 발생
+    // DiskStorage가 항상 ImageDatabase의 serial excutor에서 실행됨을 보상하기 위해 @ImageDatabase를 붙여준다.
     
     private var folder: URL
     
