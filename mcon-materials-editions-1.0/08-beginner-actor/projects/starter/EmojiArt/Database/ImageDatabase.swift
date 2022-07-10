@@ -34,6 +34,13 @@ import Foundation
 import UIKit
 
 @globalActor actor ImageDatabase {
+    
+    private var onDiskAccessCounter = 0 {
+        didSet {
+            onDiskAcccessContinuation?.yield(onDiskAccessCounter)
+        }
+    }
+    
     static let shared = ImageDatabase()     // GlobalActor 프로토콜을 만족하기 위해 shared 프로퍼티 추가
     
     let imageLoader = ImageLoader()         // ImageLoader 인스턴스를 사용하여 서버에서 아직 가져오지 않은 이미지를 자동으로 가져온다.
@@ -41,13 +48,28 @@ import UIKit
     private var storage: DiskStorage!       // 디스크 액세스 계층을 처리하는 클래스
     private var storedImagesIndex = Set<String>()   // 디스크에 있는 영구 파일의 인덱스. 이렇게 하면 ImageDatabase에 요청을 보낼 때마다 파일시스템을 확인하지 않아도 된다.
     
+    @MainActor private(set) var onDiskAccess: AsyncStream<Int>?
+    private var onDiskAcccessContinuation: AsyncStream<Int>.Continuation?
+    
+    deinit {
+        onDiskAcccessContinuation?.finish()
+    }
+    
     func setUp() async throws {
         // DiskStorage를 초기화하고, 디스크에 있는 모든 파일들을 읽어와 인덱스를 저장해둔다.
         storage = await DiskStorage()
         for fileURL in try await storage.persistedFiles() {
             storedImagesIndex.insert(fileURL.lastPathComponent)
         }
+        
         await imageLoader.setUp()
+        
+        let accessStream = AsyncStream<Int> { continuation in
+            onDiskAcccessContinuation = continuation
+        }
+        await MainActor.run {
+            self.onDiskAccess = accessStream
+        }
     }
     
     func store(image: UIImage, forKey key: String) async throws {
@@ -84,6 +106,7 @@ import UIKit
             }
             
             print("Cached on disk")
+            onDiskAccessCounter += 1
             
             // 인메모리 캐시에 저장한다.
             await imageLoader.add(image, forKey: key)
@@ -101,6 +124,7 @@ import UIKit
             try? await storage.remove(name: name)
         }
         storedImagesIndex.removeAll()
+        onDiskAccessCounter = 0
     }
     
     func clearInMemoryAssets() async {
