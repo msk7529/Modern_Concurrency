@@ -38,6 +38,67 @@ import UIKit
     
     let imageLoader = ImageLoader()         // ImageLoader 인스턴스를 사용하여 서버에서 아직 가져오지 않은 이미지를 자동으로 가져온다.
 
-    private let storage = DiskStorage()     // 디스크 액세스 계층을 처리하는 클래스
+    private var storage: DiskStorage!       // 디스크 액세스 계층을 처리하는 클래스
     private var storedImagesIndex = Set<String>()   // 디스크에 있는 영구 파일의 인덱스. 이렇게 하면 ImageDatabase에 요청을 보낼 때마다 파일시스템을 확인하지 않아도 된다.
+    
+    func setUp() async throws {
+        // DiskStorage를 초기화하고, 디스크에 있는 모든 파일들을 읽어와 인덱스를 저장해둔다.
+        storage = await DiskStorage()
+        for fileURL in try await storage.persistedFiles() {
+            storedImagesIndex.insert(fileURL.lastPathComponent)
+        }
+    }
+    
+    func store(image: UIImage, forKey key: String) async throws {
+        // image를 PNG형식으로 내보내어 디스크에 저장
+        guard let data = image.pngData() else {
+            throw "Could not save image \(key)"
+        }
+        
+        let fileName = DiskStorage.fileName(for: key)
+        try await storage.write(data, name: fileName)
+        storedImagesIndex.insert(fileName)
+    }
+
+    func image(_ key: String) async throws -> UIImage {
+        let keys = await imageLoader.cache.keys
+        if keys.contains(key) {
+            // 키를 imageLoader.cache.keys에서 바로 체크하지 않고 한 번 패치한 후에 체크하는 이유는, keys가 업데이트 되는 타이밍이랑 맞물릴 경우에 메모리 충돌이 발생할 수 있기 때문이다.
+            // 메모리에 이미지가 존재하는 경우엔 메모리에서 가져온다.
+            print("Cached in-memory")
+            return try await imageLoader.image(key)
+        }
+        
+        do {
+            // 디스크에 있는지 확인한다.
+            let fileName = DiskStorage.fileName(for: key)
+            if !storedImagesIndex.contains(fileName) {
+                throw "Image not persisted"
+            }
+            
+            // 디스크에 있으면, 읽어와서 UIImage로 변화한다.
+            let data = try await storage.read(name: fileName)
+            guard let image = UIImage(data: data) else {
+                throw "Invalid image data"
+            }
+            
+            print("Cached on disk")
+            
+            // 인메모리 캐시에 저장한다.
+            await imageLoader.add(image, forKey: key)
+            return image
+        } catch {
+            // 서버에서 이미지를 받아온다. 모든 로컬 시도가 실패하여 네트워크 호출을 해야하는 경우 실행됨.
+            let image = try await imageLoader.image(key)
+            try await store(image: image, forKey: key)
+            return image
+        }
+    }
+    
+    func clear() async {
+        for name in storedImagesIndex {
+            try? await storage.remove(name: name)
+        }
+        storedImagesIndex.removeAll()
+    }
 }
