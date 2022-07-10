@@ -33,6 +33,8 @@
 import Foundation
 
 class DiskStorage {
+    // 앱 캐시에서 파일 읽기, 쓰기 및 삭제와 같은 간단한 파일 작업
+    
     private var folder: URL
     
     init() {
@@ -44,6 +46,7 @@ class DiskStorage {
         
         do {
             try FileManager.default.createDirectory(at: databaseFolderURL, withIntermediateDirectories: true, attributes: nil)
+            print("databaseFolderURL: \(databaseFolderURL)")
         } catch {
             fatalError("Couldn't create the application support folder")
         }
