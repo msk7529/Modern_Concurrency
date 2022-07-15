@@ -6,27 +6,8 @@
 
 import UIKit
 
-struct ThreadLogger {
-    func printThreadInfo(function: StaticString, additionalText: String = "") {
-        print("\(function) \(additionalText) -> \(Thread.current)")
-    }
-}
-
-class TestClass {
-    
-    let threadLogger = ThreadLogger()
-    
-    func createTask() {
-        Task {
-            self.threadLogger.printThreadInfo(function: #function)  // bg
-        }
-    }
-}
-
-class ViewController: UIViewController {
-    
-    let threadLogger = ThreadLogger()
-    
+final class ViewController: UIViewController {
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -59,16 +40,16 @@ class ViewController: UIViewController {
     func testDetachedTask() {
         Task.detached {
             // Task.detached로 생성된 Task는 parent context에 관계없이 별도쓰레드에서 동작함.
-            self.threadLogger.printThreadInfo(function: #function)  // bg
+            ThreadLogger.printThreadInfo(function: #function)  // bg
             await self.printThreadInfo(function: #function)    // main. printThreadInfo가 VC(MainActor)의 메서드여서
             await self.asyncTestWithoutTaskBlock()  // bg
             await self.printThreadInfo(function: #function)    // main
-            self.threadLogger.printThreadInfo(function: #function)  // bg
+            ThreadLogger.printThreadInfo(function: #function)  // bg
         }
     }
     
     func testTaskInNotMainActor() {
-        let object = TestClass()
+        let object = NonMainActorObject()
         object.createTask()
         printThreadInfo(function: #function)    // main
     }
