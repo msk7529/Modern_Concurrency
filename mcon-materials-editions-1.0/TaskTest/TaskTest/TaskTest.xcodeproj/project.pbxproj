@@ -15,6 +15,7 @@
 		C28408E128815B62002E3352 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C28408DF28815B62002E3352 /* LaunchScreen.storyboard */; };
 		C28408EA28818361002E3352 /* NonMainActorObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28408E928818360002E3352 /* NonMainActorObject.swift */; };
 		C28408EC288183DC002E3352 /* ThreadLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28408EB288183DC002E3352 /* ThreadLogger.swift */; };
+		C28408EE288188AE002E3352 /* ButtonCreater.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28408ED288188AE002E3352 /* ButtonCreater.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		C28408E228815B62002E3352 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C28408E928818360002E3352 /* NonMainActorObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonMainActorObject.swift; sourceTree = "<group>"; };
 		C28408EB288183DC002E3352 /* ThreadLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadLogger.swift; sourceTree = "<group>"; };
+		C28408ED288188AE002E3352 /* ButtonCreater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonCreater.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 			children = (
 				C28408E928818360002E3352 /* NonMainActorObject.swift */,
 				C28408EB288183DC002E3352 /* ThreadLogger.swift */,
+				C28408ED288188AE002E3352 /* ButtonCreater.swift */,
 				C28408D428815B5E002E3352 /* AppDelegate.swift */,
 				C28408D628815B5F002E3352 /* SceneDelegate.swift */,
 				C28408D828815B5F002E3352 /* ViewController.swift */,
@@ -148,6 +151,7 @@
 				C28408D928815B5F002E3352 /* ViewController.swift in Sources */,
 				C28408D528815B5E002E3352 /* AppDelegate.swift in Sources */,
 				C28408D728815B5F002E3352 /* SceneDelegate.swift in Sources */,
+				C28408EE288188AE002E3352 /* ButtonCreater.swift in Sources */,
 				C28408EA28818361002E3352 /* NonMainActorObject.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
