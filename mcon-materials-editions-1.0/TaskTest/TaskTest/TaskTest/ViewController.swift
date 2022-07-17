@@ -27,6 +27,12 @@ final class ViewController: UIViewController {
         return button
     }()
     
+    private lazy var buttonForTestTaskInNotMainActor: UIButton = {
+        let button = buttonCreater.create(title: "testTaskInNotMainActor")
+        button.addTarget(self, action: #selector(testTaskInNotMainActor), for: .touchUpInside)
+        return button
+    }()
+    
     private lazy var logLabel: UILabel = {
         let label: UILabel = .init(frame: .zero)
         label.numberOfLines = 0
@@ -69,13 +75,13 @@ final class ViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        [buttonForTestTask1, buttonForTestTask2, buttonForTestDetachedTask].forEach {
+        [buttonForTestTask1, buttonForTestTask2, buttonForTestDetachedTask, buttonForTestTaskInNotMainActor].forEach {
             $0.layer.cornerRadius = $0.frame.height / 2
         }
     }
     
     private func initView() {
-        [buttonForTestTask1, buttonForTestTask2, buttonForTestDetachedTask, logLabel].forEach {
+        [buttonForTestTask1, buttonForTestTask2, buttonForTestDetachedTask, buttonForTestTaskInNotMainActor, logLabel].forEach {
             view.addSubview($0)
         }
         
@@ -87,6 +93,9 @@ final class ViewController: UIViewController {
         
         buttonForTestDetachedTask.topAnchor.constraint(equalTo: buttonForTestTask1.bottomAnchor, constant: 10).isActive = true
         buttonForTestDetachedTask.leadingAnchor.constraint(equalTo: buttonForTestTask1.leadingAnchor).isActive = true
+        
+        buttonForTestTaskInNotMainActor.topAnchor.constraint(equalTo: buttonForTestDetachedTask.bottomAnchor, constant: 10).isActive = true
+        buttonForTestTaskInNotMainActor.leadingAnchor.constraint(equalTo: buttonForTestTask1.leadingAnchor).isActive = true
         
         logLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30).isActive = true
         logLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10).isActive = true
@@ -107,7 +116,7 @@ final class ViewController: UIViewController {
             // 그러나.. 첫번째 printThreadInfo 메서드 호출을 제거하면 bgThread에서 동작하는데, 이건 이유가 뭘까.. Task 생성후 즉시 await로 쓰레드제어권을 시스템에 넘겨주면 Task.detached로 생성한 것처럼 되는건가? await후에 메인쓰레드로 돌아오는거 보면 그것도 아닌거 같은데.
             await asyncTestWithoutTaskBlock()  // bg -> bg
             printThreadInfo(function: #function)    // main
-            // self.threadLogger.printThreadInfo(function: #function)  // man
+            // self.threadLogger.printThreadInfo(function: #function)  // main
         }
     }
     
@@ -122,7 +131,7 @@ final class ViewController: UIViewController {
         }
     }
     
-    func testTaskInNotMainActor() {
+    @objc func testTaskInNotMainActor() {
         let object = NonMainActorObject(logPublihser: logPublisher)
         object.createTask()
         printThreadInfo(function: #function)    // main
